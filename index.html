@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Chess Game</title>
+<style>
+body {
+  font-family: sans-serif;
+}
+#board {
+  display: grid;
+  grid-template-columns: repeat(8, 50px);
+  grid-template-rows: repeat(8, 50px);
+  border: 2px solid black;
+}
+.square {
+  width: 50px;
+  height: 50px;
+  text-align: center;
+  font-size: 30px;
+  cursor: pointer;
+}
+.white {
+  background-color: #f0d9b5;
+}
+.black {
+  background-color: #b58863;
+}
+.selected {
+  background-color: yellow;
+}
+</style>
+</head>
+<body>
+
+<h1>Chess Game</h1>
+<div id="board"></div>
+
+<script>
+const board = document.getElementById('board');
+const pieces = {
+  'r': '&#9820;', 'n': '&#9822;', 'b': '&#9821;', 'q': '&#9819;', 'k': '&#9818;', 'p': '&#9823;',
+  'R': '&#9814;', 'N': '&#9816;', 'B': '&#9815;', 'Q': '&#9813;', 'K': '&#9812;', 'P': '&#9817;'
+};
+let chessBoard = [
+    ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
+    ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
+    [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+    [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+    [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+    [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+    ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
+    ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
+];
+let selectedSquare = null;
+
+function createBoard() {
+  for (let row = 0; row < 8; row++) {
+    for (let col = 0; col < 8; col++) {
+      const square = document.createElement('div');
+      square.classList.add('square');
+      square.classList.add((row + col) % 2 === 0 ? 'white' : 'black');
+      square.dataset.row = row;
+      square.dataset.col = col;
+      square.innerHTML = pieces[chessBoard[row][col]] || '';
+      square.addEventListener('click', handleSquareClick);
+      board.appendChild(square);
+    }
+  }
+}
+
+function handleSquareClick(event) {
+    const square = event.target;
+    const row = parseInt(square.dataset.row);
+    const col = parseInt(square.dataset.col);
+
+    if (selectedSquare) {
+        const fromRow = parseInt(selectedSquare.dataset.row);
+        const fromCol = parseInt(selectedSquare.dataset.col);
+        chessBoard[row][col] = chessBoard[fromRow][fromCol];
+        chessBoard[fromRow][fromCol] = ' ';
+        updateBoard();
+        selectedSquare.classList.remove('selected');
+        selectedSquare = null;
+    } else if (chessBoard[row][col] !== ' '){
+        if(selectedSquare) selectedSquare.classList.remove('selected');
+        selectedSquare = square;
+        selectedSquare.classList.add('selected');
+    }
+}
+
+function updateBoard() {
+    for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+            const square = board.children[row * 8 + col];
+            square.innerHTML = pieces[chessBoard[row][col]] || '';
+        }
+    }
+}
+
+createBoard();
+
+</script>
+
+</body>
+</html>
