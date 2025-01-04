@@ -4,29 +4,42 @@
 <title>Chess Game</title>
 <style>
 body {
-  font-family: sans-serif;
+    font-family: sans-serif;
 }
+
 #board {
-  display: grid;
-  grid-template-columns: repeat(8, 50px);
-  grid-template-rows: repeat(8, 50px);
-  border: 2px solid black;
+    display: grid;
+    grid-template-columns: repeat(8, 50px);
+    grid-template-rows: repeat(8, 50px);
+    border: 2px solid black;
 }
+
 .square {
-  width: 50px;
-  height: 50px;
-  text-align: center;
-  font-size: 30px;
-  cursor: pointer;
+    width: 50px;
+    height: 50px;
+    text-align: center;
+    font-size: 30px;
+    cursor: pointer;
 }
+
 .white {
-  background-color: #f0d9b5;
+    background-color: #f0d9b5;
 }
+
 .black {
-  background-color: #b58863;
+    background-color: #b58863;
 }
+
 .selected {
-  background-color: yellow;
+    background-color: yellow;
+}
+
+.possible-move {
+    background-color: lightgreen;
+}
+#message {
+    margin-top: 10px;
+    font-weight: bold;
 }
 </style>
 </head>
@@ -34,12 +47,14 @@ body {
 
 <h1>Chess Game</h1>
 <div id="board"></div>
+<div id="message">White's Turn</div>
 
 <script>
 const board = document.getElementById('board');
+const message = document.getElementById('message');
 const pieces = {
-  'r': '&#9820;', 'n': '&#9822;', 'b': '&#9821;', 'q': '&#9819;', 'k': '&#9818;', 'p': '&#9823;',
-  'R': '&#9814;', 'N': '&#9816;', 'B': '&#9815;', 'Q': '&#9813;', 'K': '&#9812;', 'P': '&#9817;'
+    'r': '&#9820;', 'n': '&#9822;', 'b': '&#9821;', 'q': '&#9819;', 'k': '&#9818;', 'p': '&#9823;',
+    'R': '&#9814;', 'N': '&#9816;', 'B': '&#9815;', 'Q': '&#9813;', 'K': '&#9812;', 'P': '&#9817;'
 };
 let chessBoard = [
     ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
@@ -52,20 +67,21 @@ let chessBoard = [
     ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
 ];
 let selectedSquare = null;
+let isWhiteTurn = true;
 
 function createBoard() {
-  for (let row = 0; row < 8; row++) {
-    for (let col = 0; col < 8; col++) {
-      const square = document.createElement('div');
-      square.classList.add('square');
-      square.classList.add((row + col) % 2 === 0 ? 'white' : 'black');
-      square.dataset.row = row;
-      square.dataset.col = col;
-      square.innerHTML = pieces[chessBoard[row][col]] || '';
-      square.addEventListener('click', handleSquareClick);
-      board.appendChild(square);
+    for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+            const square = document.createElement('div');
+            square.classList.add('square');
+            square.classList.add((row + col) % 2 === 0 ? 'white' : 'black');
+            square.dataset.row = row;
+            square.dataset.col = col;
+            square.innerHTML = pieces[chessBoard[row][col]] || '';
+            square.addEventListener('click', handleSquareClick);
+            board.appendChild(square);
+        }
     }
-  }
 }
 
 function handleSquareClick(event) {
@@ -74,18 +90,66 @@ function handleSquareClick(event) {
     const col = parseInt(square.dataset.col);
 
     if (selectedSquare) {
-        const fromRow = parseInt(selectedSquare.dataset.row);
-        const fromCol = parseInt(selectedSquare.dataset.col);
-        chessBoard[row][col] = chessBoard[fromRow][fromCol];
-        chessBoard[fromRow][fromCol] = ' ';
-        updateBoard();
+        if (isValidMove(selectedSquare, square)) {
+            movePiece(selectedSquare, square);
+            isWhiteTurn = !isWhiteTurn;
+            message.textContent = (isWhiteTurn ? "White's" : "Black's") + " Turn";
+        }
+        clearPossibleMoves();
         selectedSquare.classList.remove('selected');
         selectedSquare = null;
-    } else if (chessBoard[row][col] !== ' '){
-        if(selectedSquare) selectedSquare.classList.remove('selected');
+    } else if (chessBoard[row][col] !== ' ' && isWhiteTurn === isUpperCase(chessBoard[row][col])) {
         selectedSquare = square;
         selectedSquare.classList.add('selected');
+        showPossibleMoves(selectedSquare);
     }
+}
+function isUpperCase(str) {
+    return str === str.toUpperCase();
+}
+
+function clearPossibleMoves() {
+    const squares = document.querySelectorAll('.possible-move');
+    squares.forEach(s => s.classList.remove('possible-move'));
+}
+
+function showPossibleMoves(selectedSquare){
+    const fromRow = parseInt(selectedSquare.dataset.row);
+    const fromCol = parseInt(selectedSquare.dataset.col);
+    for (let row = 0; row < 8; row++){
+        for (let col = 0; col < 8; col++){
+            let toSquare = board.children[row * 8 + col];
+            if(isValidMove(selectedSquare, toSquare)){
+                toSquare.classList.add('possible-move');
+            }
+        }
+    }
+}
+
+function isValidMove(fromSquare, toSquare) {
+    if (!fromSquare || !toSquare) return false;
+
+    const fromRow = parseInt(fromSquare.dataset.row);
+    const fromCol = parseInt(fromSquare.dataset.col);
+    const toRow = parseInt(toSquare.dataset.row);
+    const toCol = parseInt(toSquare.dataset.col);
+    const piece = chessBoard[fromRow][fromCol];
+
+    if (fromRow === toRow && fromCol === toCol) return false;
+    if (chessBoard[toRow][toCol] !== ' ' && isUpperCase(chessBoard[toRow][toCol]) === isUpperCase(piece)) return false;
+
+    return true; // Placeholder for more detailed validation
+}
+
+function movePiece(fromSquare, toSquare) {
+    const fromRow = parseInt(fromSquare.dataset.row);
+    const fromCol = parseInt(fromSquare.dataset.col);
+    const toRow = parseInt(toSquare.dataset.row);
+    const toCol = parseInt(toSquare.dataset.col);
+
+    chessBoard[toRow][toCol] = chessBoard[fromRow][fromCol];
+    chessBoard[fromRow][fromCol] = ' ';
+    updateBoard();
 }
 
 function updateBoard() {
@@ -98,7 +162,6 @@ function updateBoard() {
 }
 
 createBoard();
-
 </script>
 
 </body>
